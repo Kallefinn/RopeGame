@@ -2,6 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
+//Player Movement is achieved by Applying Forces to a rigidbody, updates on "position" should be avoided
+
+
 public class PlayerMovement : MonoBehaviour
 {
 

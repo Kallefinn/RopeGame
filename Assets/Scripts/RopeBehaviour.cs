@@ -2,6 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
+//a rope consists of connected rigidbodys(segments), created from a prefab. The ropes last segment is connected to the "hook".
+//This can be any rigidbody you call "reconnectHoock()" on
+
+
 public class RopeBehaviour : MonoBehaviour
 {
     [SerializeField]
@@ -31,9 +36,45 @@ public class RopeBehaviour : MonoBehaviour
         return segment;
     }
 
+
+    private void connectWithJoints(Transform segment1, Transform segment2)
+    {
+            Rigidbody2D parentBody = segment1.GetComponent<Rigidbody2D>();
+            DistanceJoint2D joint = segment2.GetComponent<DistanceJoint2D>();
+
+            joint.enableCollision = true;
+            joint.connectedBody = parentBody;
+    }
+
+    private void reconnectHook(Transform segment)
+    {
+        if (segment != null)
+        {
+            hookJoint = segment.GetComponent<DistanceJoint2D>();
+
+            hookJoint.connectedBody = hookBody;
+        }
+    }
+
+    public void setHook(Rigidbody2D newHook)
+    {
+        hookBody = newHook;
+        reconnectHook(segments[segmentIndex]);
+    }
+
+
+    private bool isTouchingHook()
+    {
+        if (segments[segmentIndex] != null)
+        {
+            CircleCollider2D segment = segments[segmentIndex].GetComponent<CircleCollider2D>();
+            return hookBody.IsTouching(segment);
+        }
+        return false;
+    }
+
     private void addSegment()
     {
-
         int index = ++segmentIndex;
         var segment = segments[index] = createSegment();
         segment.GetComponent<RopePhysics>().setpositionInArray(index);
@@ -42,10 +83,11 @@ public class RopeBehaviour : MonoBehaviour
 
         if (segments[index - 1] != null)
         {
-            connectWithJoints(segments[index], segments[index-1]);
+            connectWithJoints(segments[index], segments[index - 1]);
         }
 
     }
+
 
     private void removeSegment()
     {
@@ -58,41 +100,6 @@ public class RopeBehaviour : MonoBehaviour
             segmentIndex--;
             reconnectHook(segments[segmentIndex]);
         }
-    }
-
-    private void connectWithJoints(Transform segment1, Transform segment2)
-    {
-            Rigidbody2D parentBody = segment1.GetComponent<Rigidbody2D>();
-            DistanceJoint2D joint = segment2.GetComponent<DistanceJoint2D>();
-
-            joint.enableCollision = true;
-            joint.connectedBody = parentBody;
-    }
-
-
-    public void setHook(Rigidbody2D newHook)
-    {
-        hookBody = newHook;
-        reconnectHook(segments[segmentIndex]);
-    }
-    private void reconnectHook(Transform segment)
-    {
-        if (segment != null)
-        {
-            hookJoint = segment.GetComponent<DistanceJoint2D>();
-
-            hookJoint.connectedBody = hookBody;
-        }   
-    }
-
-    private bool isTouchingHook()
-    {
-        if (segments[segmentIndex] != null)
-        {
-            CircleCollider2D segment = segments[segmentIndex].GetComponent<CircleCollider2D>();
-            return hookBody.IsTouching(segment);
-        }
-        return false;
     }
 
 
