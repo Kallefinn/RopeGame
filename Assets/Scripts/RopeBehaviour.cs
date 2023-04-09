@@ -12,7 +12,6 @@ public class RopeBehaviour : MonoBehaviour
     [SerializeField]
     Transform ropeSegment = null;
 
-    [SerializeField]
     Transform hook = null;
 
     Transform[] segments;
@@ -21,10 +20,9 @@ public class RopeBehaviour : MonoBehaviour
 
     Joint2D hookJoint;
 
-
     private int segmentIndex = 0;
 
-    private Transform createSegment()
+    public Transform createSegment()
     {
 
         Transform segment;
@@ -36,17 +34,16 @@ public class RopeBehaviour : MonoBehaviour
         return segment;
     }
 
-
-    private void connectWithJoints(Transform segment1, Transform segment2)
+    public void connectWithJoints(Transform segment1, Transform segment2)
     {
-            Rigidbody2D parentBody = segment1.GetComponent<Rigidbody2D>();
-            DistanceJoint2D joint = segment2.GetComponent<DistanceJoint2D>();
+        Rigidbody2D parentBody = segment1.GetComponent<Rigidbody2D>();
+        DistanceJoint2D joint = segment2.GetComponent<DistanceJoint2D>();
 
-            joint.enableCollision = true;
-            joint.connectedBody = parentBody;
+        joint.enableCollision = true;
+        joint.connectedBody = parentBody;
     }
 
-    private void reconnectHook(Transform segment)
+    public void reconnectHook(Transform segment)
     {
         if (segment != null)
         {
@@ -56,14 +53,15 @@ public class RopeBehaviour : MonoBehaviour
         }
     }
 
-    public void setHook(Rigidbody2D newHook)
+    public void setHook(Transform newHook)
     {
-        hookBody = newHook;
+        hook = newHook;
+        hookBody = hook.GetComponent<Rigidbody2D>();
         reconnectHook(segments[segmentIndex]);
     }
 
 
-    private bool isTouchingHook()
+    public bool isTouchingHook()
     {
         if (segments[segmentIndex] != null)
         {
@@ -73,7 +71,7 @@ public class RopeBehaviour : MonoBehaviour
         return false;
     }
 
-    private void addSegment()
+    public void addSegment()
     {
         int index = ++segmentIndex;
         var segment = segments[index] = createSegment();
@@ -88,8 +86,7 @@ public class RopeBehaviour : MonoBehaviour
 
     }
 
-
-    private void removeSegment()
+    public void removeLastSegment()
     {
         if (segments[segmentIndex] != null)
         {
@@ -102,49 +99,22 @@ public class RopeBehaviour : MonoBehaviour
         }
     }
 
-
-
-
     private void Awake()
     {
-        segments = new Transform[1000];        
+        segments = new Transform[1000];
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        hookBody = hook.GetComponent<Rigidbody2D>();
     }
 
-    public float timer = 0.2f;
-    public float createcounter = 0, deletecounter = 0;
+
 
     // Update is called once per frame
     void Update()
     {
 
-        createcounter += Time.deltaTime;
-        deletecounter += Time.deltaTime;
 
-        if (Input.GetKey("l") && createcounter >= timer)
-        {
-            createcounter = 0;
-            addSegment();
-        }
-
-        if (Input.GetKeyDown("k"))
-        {
-        }
-
-        if (Input.GetKey("j") && deletecounter >= timer)
-        {
-                deletecounter = 0;
-                removeSegment();
-        }
-
-        if (Input.GetMouseButton(0))
-        {
-         
-        }
     }
 }

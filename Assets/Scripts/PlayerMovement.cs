@@ -15,6 +15,9 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField]
     GameObject rope = null;
 
+    [SerializeField]
+    GameObject RopeObject;
+
 
     [SerializeField,Range(0,100)]
     float movementSpeed;
@@ -27,20 +30,32 @@ public class PlayerMovement : MonoBehaviour
 
 
     Rigidbody2D body, mouseBody;
+    RopeBehaviour ropeControll;
 
 
     // Start is called before the first frame update
-    void Start()
+
+    private void Awake()
     {
         body = this.GetComponent<Rigidbody2D>();
         mouseBody = mouseHitbox.GetComponent<Rigidbody2D>();
+        RopeObject = Instantiate(rope);
+        ropeControll = RopeObject.GetComponent<RopeBehaviour>();
+        ropeControll.setHook(mouseHitbox);
+    }
+
+
+
+    void Start()
+    {
 
     }
 
-    
-    void changeHookTo(Rigidbody2D newHook)
+   
+
+    void changeHookTo(Transform newHook)
     {
-        rope.GetComponent<RopeBehaviour>().setHook(newHook);
+        RopeObject.GetComponent<RopeBehaviour>().setHook(newHook);
     }
 
 
@@ -68,22 +83,53 @@ public class PlayerMovement : MonoBehaviour
     {
         mouseBody.AddForce(Input.mousePosition.normalized * mouseBody.mass);
 
-
         if (Input.GetKeyDown("p"))
         {
-            changeHookTo(body);
+            changeHookTo(this.transform);
         }
         if (Input.GetKeyDown("o"))
         {
-            changeHookTo(mouseBody);
+            changeHookTo(mouseHitbox);
         }
     }
+
+    public float timer = 0.2f;
+    public float createcounter = 0, deletecounter = 0;
+
+    void ropeUpdates()
+    {
+        createcounter += Time.deltaTime;
+        deletecounter += Time.deltaTime;
+
+        if (Input.GetKey("l") && createcounter >= timer)
+        {
+            createcounter = 0;
+            ropeControll.addSegment();
+        }
+
+        if (Input.GetKeyDown("k"))
+        {
+        }
+
+        if (Input.GetKey("j") && deletecounter >= timer)
+        {
+            deletecounter = 0;
+            ropeControll.removeLastSegment();
+        }
+
+        if (Input.GetMouseButton(0))
+        {
+
+        }
+    }
+
 
     // Update is called once per frame
     void Update()
     {
         updatePlayerMovement();
         updateMouse();
+        ropeUpdates();
 
     }
 }
