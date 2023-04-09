@@ -36,11 +36,16 @@ public class RopeBehaviour : MonoBehaviour
 
     public void connectWithJoints(Transform segment1, Transform segment2)
     {
-        Rigidbody2D parentBody = segment1.GetComponent<Rigidbody2D>();
+        Rigidbody2D Body = segment1.GetComponent<Rigidbody2D>();
         DistanceJoint2D joint = segment2.GetComponent<DistanceJoint2D>();
 
         joint.enableCollision = true;
-        joint.connectedBody = parentBody;
+        joint.connectedBody = Body;
+    }
+
+    public void cutJoints(Transform segment)
+    {
+        Destroy(segment.GetComponent<DistanceJoint2D>());
     }
 
     public void reconnectHook(Transform segment)
@@ -53,22 +58,16 @@ public class RopeBehaviour : MonoBehaviour
         }
     }
 
+    public void disconnectHook()
+    {
+        Destroy(hookJoint);
+    }
+
     public void setHook(Transform newHook)
     {
         hook = newHook;
         hookBody = hook.GetComponent<Rigidbody2D>();
         reconnectHook(segments[segmentIndex]);
-    }
-
-
-    public bool isTouchingHook()
-    {
-        if (segments[segmentIndex] != null)
-        {
-            CircleCollider2D segment = segments[segmentIndex].GetComponent<CircleCollider2D>();
-            return hookBody.IsTouching(segment);
-        }
-        return false;
     }
 
     public void addSegment()
@@ -90,9 +89,6 @@ public class RopeBehaviour : MonoBehaviour
     {
         if (segments[segmentIndex] != null)
         {
-            Rigidbody2D body = segments[segmentIndex].GetComponent<Rigidbody2D>();
-            DistanceJoint2D joint = segments[segmentIndex].GetComponent<DistanceJoint2D>();
-
             Destroy(segments[segmentIndex].gameObject);
             segmentIndex--;
             reconnectHook(segments[segmentIndex]);
@@ -109,12 +105,8 @@ public class RopeBehaviour : MonoBehaviour
     {
     }
 
-
-
     // Update is called once per frame
     void Update()
     {
-
-
     }
 }

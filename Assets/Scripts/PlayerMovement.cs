@@ -19,10 +19,10 @@ public class PlayerMovement : MonoBehaviour
     GameObject RopeObject;
 
 
-    [SerializeField,Range(0,100)]
+    [SerializeField,Range(0,1000)]
     float movementSpeed;
 
-    [SerializeField,Range(0,100)]
+    [SerializeField,Range(0,1000)]
     float jumpHeight;
 
     [SerializeField, Range(0, 100)]
@@ -34,30 +34,39 @@ public class PlayerMovement : MonoBehaviour
 
 
     // Start is called before the first frame update
-
-    private void Awake()
-    {
-        body = this.GetComponent<Rigidbody2D>();
-        mouseBody = mouseHitbox.GetComponent<Rigidbody2D>();
-        RopeObject = Instantiate(rope);
-        ropeControll = RopeObject.GetComponent<RopeBehaviour>();
-        ropeControll.setHook(mouseHitbox);
-    }
-
-
-
     void Start()
     {
 
     }
 
-   
+
+    void Awake()
+    {
+        body = this.GetComponent<Rigidbody2D>();
+        mouseBody = mouseHitbox.GetComponent<Rigidbody2D>();
+        createNewRope();
+    }
+
+
+    void createNewRope()
+    {
+        RopeObject = Instantiate(rope);
+        ropeControll = RopeObject.GetComponent<RopeBehaviour>();
+        ropeControll.setHook(mouseHitbox);
+    }
 
     void changeHookTo(Transform newHook)
     {
-        RopeObject.GetComponent<RopeBehaviour>().setHook(newHook);
+        ropeControll.setHook(newHook);
     }
 
+
+    bool jumping = false;
+
+    [SerializeField,Range(0,10)]
+    float jumpingtimer = 2;
+    
+    float jumptimer = 0;
 
     void updatePlayerMovement()
     {
@@ -73,24 +82,34 @@ public class PlayerMovement : MonoBehaviour
             body.AddForce(movementSpeed * Vector2.left);
         }
 
-        if (Input.GetKey("w"))
+        if (Input.GetKey("s"))
+        {
+            body.AddForce(movementSpeed * Vector2.down);
+        }
+
+        if (Input.GetKeyDown("w")&& jumping == false)
+        {
+            jumping = true;
+        }
+
+        if (jumptimer > jumpingtimer)
+        {
+            jumping = false;
+            jumptimer = 0;
+        }
+
+        if (jumping)
         {
             body.AddForce(jumpHeight * Vector2.up);
         }
+
+        jumptimer += Time.deltaTime;
     }
 
    void updateMouse()
     {
-        mouseBody.AddForce(Input.mousePosition.normalized * mouseBody.mass);
+        mouseBody.AddForce(Input.mousePosition.normalized * mouseBody.mass * 2);
 
-        if (Input.GetKeyDown("p"))
-        {
-            changeHookTo(this.transform);
-        }
-        if (Input.GetKeyDown("o"))
-        {
-            changeHookTo(mouseHitbox);
-        }
     }
 
     public float timer = 0.2f;
@@ -109,6 +128,8 @@ public class PlayerMovement : MonoBehaviour
 
         if (Input.GetKeyDown("k"))
         {
+            ropeControll.disconnectHook();
+            createNewRope();
         }
 
         if (Input.GetKey("j") && deletecounter >= timer)
@@ -117,10 +138,25 @@ public class PlayerMovement : MonoBehaviour
             ropeControll.removeLastSegment();
         }
 
-        if (Input.GetMouseButton(0))
+        if (Input.GetKeyDown("p"))
         {
-
+            changeHookTo(this.transform);
         }
+        if (Input.GetKeyDown("o"))
+        {
+            changeHookTo(mouseHitbox);
+        }
+
+        if(deletecounter > 100) 
+        {
+            deletecounter = 0;
+        }
+        if(createcounter > 100)
+        {
+            createcounter = 0;
+        }
+
+
     }
 
 
