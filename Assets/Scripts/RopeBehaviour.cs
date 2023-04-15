@@ -14,13 +14,21 @@ public class RopeBehaviour : MonoBehaviour
 
     Transform hook = null;
 
+    Transform hand;
+
     Transform[] segments;
 
     Rigidbody2D hookBody;
 
-    Joint2D hookJoint;
+    DistanceJoint2D hookJoint;
 
     private int segmentIndex = 0;
+
+
+    public void setHand(Transform newHand)
+    {
+        hand = newHand;
+    }
 
     public Transform createSegment()
     {
@@ -30,14 +38,15 @@ public class RopeBehaviour : MonoBehaviour
         segment = Instantiate(ropeSegment);
         segment.transform.position = hook.position;
         segment.name = "segment " + segmentIndex;
+        segment.GetComponent<RopePhysics>().setHand(hand);
 
         return segment;
     }
 
     public void connectWithJoints(Transform segment1, Transform segment2)
     {
-        Rigidbody2D Body = segment1.GetComponent<Rigidbody2D>();
-        DistanceJoint2D joint = segment2.GetComponent<DistanceJoint2D>();
+        var Body = segment1.GetComponent<Rigidbody2D>();
+        var joint = segment2.GetComponent<DistanceJoint2D>();
 
         joint.enableCollision = true;
         joint.connectedBody = Body;
@@ -85,9 +94,11 @@ public class RopeBehaviour : MonoBehaviour
 
     }
 
+
     public void removeLastSegment()
     {
-        if (segments[segmentIndex] != null)
+
+        if (segments[segmentIndex] != null && Vector2.Distance(hook.position, segments[segmentIndex].position) <= hook.localScale.x + 0.08)
         {
             Destroy(segments[segmentIndex].gameObject);
             segmentIndex--;

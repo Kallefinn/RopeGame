@@ -9,15 +9,19 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
 
+    public enum State{
+        Moving, Hanging, Floating
+    }
+
+    State activeState = State.Moving;
+
     [SerializeField]
     Transform mouseHitbox = null;
 
     [SerializeField]
     GameObject rope = null;
 
-    [SerializeField]
     GameObject RopeObject;
-
 
     [SerializeField,Range(0,1000)]
     float movementSpeed;
@@ -29,7 +33,7 @@ public class PlayerMovement : MonoBehaviour
     float drag;
 
 
-    Rigidbody2D body, mouseBody;
+    Rigidbody2D body;
     RopeBehaviour ropeControll;
 
 
@@ -43,8 +47,8 @@ public class PlayerMovement : MonoBehaviour
     void Awake()
     {
         body = this.GetComponent<Rigidbody2D>();
-        mouseBody = mouseHitbox.GetComponent<Rigidbody2D>();
         createNewRope();
+       
     }
 
 
@@ -52,7 +56,8 @@ public class PlayerMovement : MonoBehaviour
     {
         RopeObject = Instantiate(rope);
         ropeControll = RopeObject.GetComponent<RopeBehaviour>();
-        ropeControll.setHook(mouseHitbox);
+        ropeControll.setHook(this.transform);
+        ropeControll.setHand(mouseHitbox);
     }
 
     void changeHookTo(Transform newHook)
@@ -60,55 +65,108 @@ public class PlayerMovement : MonoBehaviour
         ropeControll.setHook(newHook);
     }
 
+    void updateMouse()
+    {
+        mouseHitbox.position = this.transform.position + new Vector3(this.transform.localScale.x + 0.5f, 0, 0);
+    }
 
-    bool jumping = false;
+    [SerializeField, Range(0, 10)]
+    float accelerationTimer = 1;
+    float accelerationRightCounter = 1;
+    float accelerationLeftCounter = 1;
 
-    [SerializeField,Range(0,10)]
-    float jumpingtimer = 2;
-    
-    float jumptimer = 0;
+    [SerializeField, Range(0, 10)]
+    float decellerateTimer = 1;
+    float decellerateRightCounter = 1;
+    float decellerateLeftCounter = 1;
+
+    [SerializeField, Range(0, 1000)]
+    float accelerationSpeed = 600;
+
+    void walking()
+    {
+
+        if (Input.GetKeyDown("d"))
+        {
+            this.transform.rotation = Quaternion.Euler(this.transform.rotation.x, 0, this.transform.rotation.z);
+            mouseHitbox.position = new Vector3(mouseHitbox.position.x * -1, mouseHitbox.position.y, mouseHitbox.position.z);
+            accelerationRightCounter = 0;
+        }
+        if (Input.GetKey("d"))
+        {
+            body.AddForce(Vector2.right * drag * body.velocity);
+        }
+        if (Input.GetKeyUp("d"))
+        {
+            body.AddForce(accelerationSpeed * Vector2.left);
+        }
+
+
+        if (Input.GetKeyDown("a"))
+        {
+            this.transform.rotation = Quaternion.Euler(this.transform.rotation.x, 180, this.transform.rotation.z);
+            mouseHitbox.position = new Vector3(mouseHitbox.position.x * -1, mouseHitbox.position.y, mouseHitbox.position.z);
+            accelerationLeftCounter = 0;
+        }
+
+        if (Input.GetKey("a"))
+        {
+            body.AddForce(Vector2.left * drag * body.velocity);
+        }
+        if (Input.GetKeyUp("a"))
+        {
+            body.AddForce(accelerationSpeed * Vector2.right);
+        }
+    }
+
+
+    void applyInputForces()
+    {
+        if (accelerationRightCounter < accelerationTimer)
+        {
+            body.AddForce(accelerationSpeed * Vector2.right);
+        }
+        if (accelerationLeftCounter < accelerationTimer)
+        {
+            body.AddForce(accelerationSpeed * Vector2.left);
+        }
+
+        if (decellerateRightCounter < decellerateTimer)
+        {
+            body.AddForce(accelerationSpeed * Vector2.left);
+        }
+        if (decellerateLeftCounter < decellerateTimer)
+        {
+            body.AddForce(accelerationSpeed * Vector2.right);
+        }
+    }
 
     void updatePlayerMovement()
     {
         body.AddForce(body.velocity * -drag);
 
-        if (Input.GetKey("d"))
+        if (activeState == State.Moving)
         {
-            body.AddForce(movementSpeed * Vector2.right);
+            walking();
+
+            if (Input.GetKey("s"))
+            {
+                body.AddForce(movementSpeed * Vector2.down);
+            }
+
+            if (Input.GetKey("w"))
+            {
+                body.AddForce(jumpHeight * Vector2.up);
+            }
         }
 
-        if (Input.GetKey("a"))
-        {
-            body.AddForce(movementSpeed * Vector2.left);
-        }
+        applyInputForces();
 
-        if (Input.GetKey("s"))
-        {
-            body.AddForce(movementSpeed * Vector2.down);
-        }
+        accelerationRightCounter += Time.deltaTime;
+        decellerateRightCounter += Time.deltaTime;
 
-        if (Input.GetKeyDown("w")&& jumping == false)
-        {
-            jumping = true;
-        }
-
-        if (jumptimer > jumpingtimer)
-        {
-            jumping = false;
-            jumptimer = 0;
-        }
-
-        if (jumping)
-        {
-            body.AddForce(jumpHeight * Vector2.up);
-        }
-
-        jumptimer += Time.deltaTime;
-    }
-
-   void updateMouse()
-    {
-        mouseBody.AddForce(Input.mousePosition.normalized * mouseBody.mass * 2);
+        accelerationLeftCounter += Time.deltaTime;
+        decellerateLeftCounter += Time.deltaTime;
 
     }
 
@@ -142,10 +200,6 @@ public class PlayerMovement : MonoBehaviour
         {
             changeHookTo(this.transform);
         }
-        if (Input.GetKeyDown("o"))
-        {
-            changeHookTo(mouseHitbox);
-        }
 
         if(deletecounter > 100) 
         {
@@ -164,8 +218,8 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         updatePlayerMovement();
-        updateMouse();
         ropeUpdates();
+        updateMouse();
 
     }
 }
